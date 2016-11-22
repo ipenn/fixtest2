@@ -3,6 +3,7 @@ import quickfix44 as fix44
 
 import datetime
 import random
+import time
 
 class Application (fix.Application):
     
@@ -14,35 +15,36 @@ class Application (fix.Application):
         self.sessionID = sessionID
         print("onLogon - sessionID: " + sessionID.toString())
 
-        mdr = fix.Message()
-        mdr.getHeader().setField(fix.BeginString(fix.BeginString_FIX44))
-        mdr.getHeader().setField(fix.MsgType(fix.MsgType_MarketDataRequest))
+        currency_pairs = ['GBP/USD', 'EUR/USD']
 
-        mdr.setField(fix.MDReqID('17499348912123123'))      # a random string
-        mdr.setField(fix.SubscriptionRequestType(fix.SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES))        # what stater required
-        mdr.setField(fix.MarketDepth(1))        # what stater required
+        for ccy in currency_pairs:
+            mdr = fix.Message()
+            mdr.getHeader().setField(fix.BeginString(fix.BeginString_FIX44))
+            mdr.getHeader().setField(fix.MsgType(fix.MsgType_MarketDataRequest))
 
-        mdr.setField(fix.AggregatedBook(True))
+            current_milli_time = lambda: int(round(time.time() * 1000))
+            mdr.setField(fix.MDReqID(str(current_milli_time())))      # a random string
+            mdr.setField(fix.SubscriptionRequestType(fix.SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES))        # what stater required
+            mdr.setField(fix.MarketDepth(1))        # what stater required
 
-        mdr.setField(fix.NoMDEntryTypes(1))     # what stater required
-        mdr.setField(fix.MDUpdateType(fix.MDUpdateType_INCREMENTAL_REFRESH))        # what stater required
+            mdr.setField(fix.AggregatedBook(True))
 
-        group = fix44.MarketDataRequest().NoMDEntryTypes()
-        group.setField(fix.MDEntryType(fix.MDEntryType_BID))
-        mdr.addGroup(group)
-        group.setField(fix.MDEntryType(fix.MDEntryType_OFFER))
-        mdr.addGroup(group)
+            mdr.setField(fix.NoMDEntryTypes(1))     # what stater required
+            mdr.setField(fix.MDUpdateType(fix.MDUpdateType_INCREMENTAL_REFRESH))        # what stater required
 
-        mdr.setField(fix.NoRelatedSym(1))
+            group = fix44.MarketDataRequest().NoMDEntryTypes()
+            group.setField(fix.MDEntryType(fix.MDEntryType_BID))
+            mdr.addGroup(group)
+            group.setField(fix.MDEntryType(fix.MDEntryType_OFFER))
+            mdr.addGroup(group)
 
-        symbol = fix44.MarketDataRequest().NoRelatedSym()
+            mdr.setField(fix.NoRelatedSym(1))
 
-        symbol.setField(fix.Symbol('GBP/USD'))
-        symbol.setField(fix.Symbol('EUR/USD'))
+            symbol = fix44.MarketDataRequest().NoRelatedSym()
+            symbol.setField(fix.Symbol(ccy))
+            mdr.addGroup(symbol)
 
-        mdr.addGroup(symbol)
-
-        fix.Session.sendToTarget(mdr, sessionID)
+            fix.Session.sendToTarget(mdr, sessionID)
 
 
 
