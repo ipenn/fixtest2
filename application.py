@@ -38,6 +38,8 @@ class Application (fix.Application):
         symbol = fix44.MarketDataRequest().NoRelatedSym()
 
         symbol.setField(fix.Symbol('GBP/USD'))
+        symbol.setField(fix.Symbol('EUR/USD'))
+
         mdr.addGroup(symbol)
 
         fix.Session.sendToTarget(mdr, sessionID)
